@@ -6,7 +6,7 @@ import static java.lang.Math.pow;
 
 public class LongMath {
     private int w;
-    private int d = (int)log(w);
+    private int d = 2;
     private long[] num;
     public LongMath(String s){
         w = 4;
@@ -37,9 +37,10 @@ public class LongMath {
     public LongMath(int l, long constant){
         w = 4;
         num = new long[l];
-        num[0] =1;
+        num[0] = constant;
     }
     public LongMath(LongMath that){
+        this();
         this.w = that.w;
         this.num = new long[that.num.length];
         for(int i =0; i< that.num.length;i++) num[i] = that.num[i];
@@ -47,17 +48,34 @@ public class LongMath {
     public int BitLength(){
         int ld = this.DigitLength()-1;
         int rest = Integer.toBinaryString((int)this.num[ld]).length();
-        return  ld+rest;
+        return  4*ld+rest;
     }
     public int DigitLength(){
         int i = this.num.length-1;
-        while(this.num[i] == 0 && i > -1) i--;
+        while(this.num[i] == 0 && i > 0) i--;
         return i+1;
     }
+   // public LongMath LongShiftBitToHigh(int shift){return new LongMath();}
+   public LongMath LongShiftBitToHigh(int shift){
+       LongMath C = new LongMath(this);
+       int bit = shift & (w-1); // number bit
+       int cell = shift >> d;  // number cell
+       if(cell!=0) C=C.LongShiftDigitToHigh(cell);
+       if (bit!=0){
+           for (int i = num.length-1; i > 0; i--){
+               long temp = C.num[i-1]>>(w - bit);
+               long a1 = C.num[i]<<bit|temp;
+               C.num[i] = a1&((int)pow(2,w)-1);
+           }
+           C.num[0] = (C.num[0]<<bit)& ((int)pow(2,w) - 1);
+       }
+       return C;
+   }
     public void InsertBit(int insert){
-        this.num[insert >> d] = this.num[insert >> d] | 1 << w-1 & insert;
+//        this.num[insert >> d] = this.num[insert >> d] | 1 << w-1 & insert;
+        num[insert >> d] = num[insert >> d]|(1<<(insert & (w-1)));
     }
-    public long GetBit(int place){return this.num[place >> d] | 0 << w-1 & place;}
+    public long GetBit(int place){return ((this.num[(place >> d)]) & (1 << ((w-1) & place))) >> ((w-1) & place);}
     public LongMath LongShiftDigitToHigh (int shift){
         LongMath c = new LongMath(this.num.length);
         for(int i = 0; i < this.num.length - shift; i++){
@@ -86,7 +104,7 @@ public class LongMath {
 
     public LongMath LongSub(LongMath that){
         LongMath c;
-        if(that.Cmp(this) > 0){return null;}
+        if(that.Cmp(this) > 0){return new LongMath();}
         else { c = new LongMath(this.num.length);}
         int borrow = 0;
         long temp = 0;
@@ -105,10 +123,10 @@ public class LongMath {
     }
 
     public int Cmp(LongMath that){
-        if (this.num.length > that.num.length) return 1;
-        else if (this.num.length < that.num.length) return -1;
+        if (this.BitLength() > that.BitLength()) return 1;
+        else if (this.BitLength() < that.BitLength()) return -1;
         else {
-        int i = that.num.length-1;
+        int i = that.DigitLength()-1;
         while(i >=0 && this.num[i]==that.num[i]) i--;
         if(i == -1) return 0;
         if(this.num[i] > that.num[i]) return 1;
@@ -144,8 +162,10 @@ public class LongMath {
     public LongMath LongPow1(LongMath p){
         LongMath c = new LongMath(this.num.length, (long)1);
         LongMath a = new LongMath(this);
+        long pbl;
         for(int i=0; i < p.BitLength(); i++){
-            if(p.GetBit(i) == 1) c = c.LongMul(a);
+            pbl = p.GetBit(i);
+            if(pbl == 1){c = c.LongMul(a);}
             a = a.LongMul(a);
         }
         return c;
@@ -159,20 +179,20 @@ public class LongMath {
         return c;
     }
     public Pair<LongMath,LongMath> LongDiv(LongMath that){
-        LongMath r = new LongMath(this);
-        LongMath q = new LongMath((long)0);
+        LongMath r = new LongMath(toString());
+        LongMath q = new LongMath();
         LongMath c = new LongMath();
         int k = that.BitLength();
         int t = 0;
-        while(r.Cmp(that) >= 0) {
+        while(r.Cmp(that) != -1) {
             t = r.BitLength();
-            c = that.LongShiftDigitToHigh(t-k);
+            c = that.LongShiftBitToHigh(t-k);
             if(r.Cmp(c) < 0){
                 t--;
                 c = that.LongShiftDigitToHigh(t-k);
             }
             r = r.LongSub(c);
-            q.InsertBit((int)pow(2,t-k));
+            q.InsertBit(t-k);
         }
         return new Pair<LongMath,LongMath>(q,r);
     }
