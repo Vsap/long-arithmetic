@@ -121,7 +121,9 @@ public class LongMath {
         }
         return c;
     }
-
+    public LongMath LongAbs(LongMath that){
+        return (this.Cmp(that)==1) ? this.LongSub(that) : that.LongSub(this);
+    }
     public int Cmp(LongMath that){
         if (this.BitLength() > that.BitLength()) return 1;
         else if (this.BitLength() < that.BitLength()) return -1;
@@ -196,4 +198,50 @@ public class LongMath {
         }
         return new Pair<LongMath,LongMath>(q,r);
     }
+    public LongMath LongEuclid(LongMath b){
+        LongMath A = new LongMath(this);
+        LongMath B = new LongMath(b);
+        LongMath D = new LongMath(this.DigitLength(), 1);
+        while((A.GetBit(0)==0)&&(B.GetBit(0)==0)){
+            A = A.LongShiftDigitToLow(1);
+            B = B.LongShiftDigitToLow(1);
+            D = D.LongShiftDigitToHigh(1);
+        }
+        while (A.GetBit(0)==0) A = A.LongShiftDigitToLow(1);
+        while (B.Cmp(new LongMath(0))!=0){
+            while (B.GetBit(0)==0){
+                B = B.LongShiftDigitToLow(1);
+            }
+            LongMath X = (A.Cmp(B)==1) ? B : A;
+            LongMath Y = A.LongAbs(B);
+            A=X;
+            B=Y;
+        }
+        D = D.LongMul(A);
+        return D;
+    }
+
+    private LongMath BarrettReduction(LongMath N, LongMath Mu){
+        int k = this.DigitLength()/2;
+        LongMath Q = this.LongShiftDigitToLow(k-1);
+        Q = Q.LongMul(Mu);
+        Q = Q.LongShiftDigitToLow(k+1);
+        LongMath R = this.LongSub(Q.LongMul(N));
+        while (R.Cmp(N)!=-1){
+            R = R.LongSub(N);
+        }
+        return R;
+    }
+    public LongMath LongModPowerBarrett(LongMath B, LongMath N){
+        LongMath A = new LongMath(this);
+        LongMath C = new LongMath(1);
+        LongMath Mu = new LongMath(B.DigitLength()+1,1);
+        Mu = Mu.LongShiftDigitToHigh(B.DigitLength());
+        for (int i = 0; i < B.BitLength(); i++){
+            if (B.GetBit(i)==1) C = A.LongMul(C).BarrettReduction(N, Mu);
+            A = A.LongMul(A).BarrettReduction(N, Mu);
+        }
+        return C;
+    }
+
 }

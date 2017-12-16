@@ -2,8 +2,8 @@ import javafx.util.Pair;
 
 public class Main {
     public static void main(String[] args){
-        LongMath a = new LongMath("0000F008");
-        LongMath b = new LongMath("0000F008");
+        LongMath a = new LongMath("0000CC");
+        LongMath b = new LongMath("0000AA");
         LongMath c = a.LongMul(b);
         System.out.println("A > B = "+ a.Cmp(b));
         System.out.println("  A = "+a);
