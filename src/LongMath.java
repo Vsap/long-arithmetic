@@ -1,7 +1,5 @@
 
 import javafx.util.Pair;
-
-import static java.lang.Math.log;
 import static java.lang.Math.pow;
 
 public class LongMath {
